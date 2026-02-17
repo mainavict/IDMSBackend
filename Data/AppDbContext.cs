@@ -21,6 +21,7 @@ public class AppDbContext: DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.SchoolId)
             .IsUnique();
+        
 
         //Ensure Email is unique
         modelBuilder.Entity<User>()
