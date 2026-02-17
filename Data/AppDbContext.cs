@@ -10,6 +10,8 @@ public class AppDbContext: DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Students> Students { get; set; }
+    public DbSet<StudentCards> StudentCards { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +37,18 @@ public class AppDbContext: DbContext
         modelBuilder.Entity<User>()
             .Property(u => u.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        
+        
+        
+        modelBuilder.Entity<StudentCards>()
+            .HasOne(s => s.Student)
+            .WithOne(s=> s.StudentCards)
+            .HasForeignKey<StudentCards>(s => s.StudentId)
+            .OnDelete(DeleteBehavior.Cascade
+            );
+        
+        modelBuilder.Entity<StudentCards>().HasIndex(s => s.CardUuid).IsUnique();
+        modelBuilder.Entity<Students>().HasIndex(s => s.SchoolId).IsUnique();
     }
 
     
