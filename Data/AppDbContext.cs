@@ -13,11 +13,11 @@ public class AppDbContext: DbContext
     public DbSet<Students> Students { get; set; }
     public DbSet<StudentCards> StudentCards { get; set; }
     
+    public DbSet<Events> Events { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-       
 
         //SchoolId is unique (smaivi2309 can't be used twice)
         modelBuilder.Entity<User>()
@@ -52,6 +52,22 @@ public class AppDbContext: DbContext
         
         modelBuilder.Entity<StudentCards>().HasIndex(s => s.CardUuid).IsUnique();
         modelBuilder.Entity<Students>().HasIndex(s => s.SchoolId).IsUnique();
+        
+        modelBuilder.Entity<Events>()
+            .HasOne(e => e.Creator)
+            .WithMany(u => u.CreatedEvents)
+            .HasForeignKey(e => e.CreatedBy)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Events>()
+            .HasOne(e => e.Updater)
+            .WithMany()
+            .HasForeignKey(e => e.UpdatedBy)
+            .OnDelete(DeleteBehavior.Restrict);modelBuilder.Entity<Events>()
+            .HasOne(e => e.Updater)
+            .WithMany()
+            .HasForeignKey(e => e.UpdatedBy)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     

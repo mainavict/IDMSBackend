@@ -28,4 +28,8 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; }= DateTime.UtcNow;
     
+    public ICollection<Events> CreatedEvents { get; set; } = new List<Events>();
+    public ICollection<Events> UpdatedEvents { get; set; } = new List<Events>();
+
+    
 }
