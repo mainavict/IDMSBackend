@@ -15,6 +15,8 @@ public class AppDbContext: DbContext
     
     public DbSet<Events> Events { get; set; }
     
+    public DbSet<EventsRecurrenceRules> EventsRecurrenceRules { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -68,6 +70,13 @@ public class AppDbContext: DbContext
             .WithMany()
             .HasForeignKey(e => e.UpdatedBy)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        
+        modelBuilder.Entity<Events>()
+            .HasOne(e => e.EventsRecurrenceRules)
+            .WithOne(r => r.Event)      
+            .HasForeignKey<EventsRecurrenceRules>(r=> r.EventId)
+            .OnDelete(DeleteBehavior.Cascade);  
     }
 
     

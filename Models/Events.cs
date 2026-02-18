@@ -52,4 +52,6 @@ public class Events
     public User Creator { get; set; } = null!;
     public User Updater { get; set; } = null!;
     
+    public EventsRecurrenceRules? EventsRecurrenceRules { get; set; }
+    
 }
