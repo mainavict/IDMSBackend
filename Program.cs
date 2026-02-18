@@ -5,6 +5,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
 using  Microsoft.EntityFrameworkCore;
 using IDMSBackend.Data;
+using IDMSBackend.Services.Interfaces;
+using IDMSBackend.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -23,7 +25,10 @@ builder.Services.AddControllers();
 // This adds the OpenAPI (Swagger) document generation
 builder.Services.AddOpenApi(); 
 
+
 // Future: builder.Services.AddDbContext<AppDbContext>(...);
+builder.Services.AddScoped<IStudentCards, StudentCardServices>();
+
 // Future: builder.Services.AddScoped<IIdentityService, IdentityService>();
 
 var app = builder.Build();
@@ -51,6 +56,12 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 //Scaler API Reference setup - only in development for now
 if (app.Environment.IsDevelopment())
 {
+    
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+    DbInitializer.Seed(context);
     
     app.MapOpenApi();
     

@@ -24,6 +24,6 @@ public class Students
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; }= DateTime.UtcNow;
     
-    public StudentCards StudentCards { get; set; } = null!;
+    public StudentCards StudentCards { get; set; } 
     
 }

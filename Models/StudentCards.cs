@@ -12,10 +12,11 @@ public class StudentCards
     public string CardUuid { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
-    public DateTime ExpiryDate { get; set; } = DateTime.UtcNow;
-    public DateTime RevokedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ExpiryDate { get; set; }
+    public DateTime RevokedAt { get; set; } 
     
     [ForeignKey("StudentId")] 
     public Students Student { get; set; } = null!;
+    
     
 }

@@ -16,6 +16,8 @@ public class AppDbContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+       
 
         //SchoolId is unique (smaivi2309 can't be used twice)
         modelBuilder.Entity<User>()
