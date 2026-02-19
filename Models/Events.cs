@@ -43,6 +43,9 @@ public class Events
     [ForeignKey("Creator")]     
     public Guid CreatedBy { get; set; } 
     
+    public Guid DomainId { get; set; }
+    public Domains Domain { get; set; } = null!;
+    
     public Guid  UpdatedBy { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -52,6 +55,6 @@ public class Events
     public User Creator { get; set; } = null!;
     public User Updater { get; set; } = null!;
     
-    public EventsRecurrenceRules? EventsRecurrenceRules { get; set; }
+    public EventsRecurrenceRules? EventsRecurrenceRule { get; set; }
     
 }

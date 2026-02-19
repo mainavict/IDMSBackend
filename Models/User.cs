@@ -2,11 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IDMSBackend.Models;
 
-public enum UserRole
-{
-    Operator,
-    Admin,
-}
+
 
 public class User
 {
@@ -23,13 +19,15 @@ public class User
     public string LastName{ get; set; }
     public  string  PasswordHash { get; set; } = string.Empty;
     public string  Email { get; set; } = string.Empty;
-    public UserRole Role { get; set; } = UserRole.Operator;
-    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; }= DateTime.UtcNow;
     
     public ICollection<Events> CreatedEvents { get; set; } = new List<Events>();
     public ICollection<Events> UpdatedEvents { get; set; } = new List<Events>();
+    public ICollection<UserDomainRole> UserDomainRoles { get; set; }
+        = new List<UserDomainRole>();
+
+   
 
     
 }

@@ -12,10 +12,11 @@ public class AppDbContext: DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Students> Students { get; set; }
     public DbSet<StudentCards> StudentCards { get; set; }
-    
     public DbSet<Events> Events { get; set; }
-    
     public DbSet<EventsRecurrenceRules> EventsRecurrenceRules { get; set; }
+    public DbSet<Roles> Roles { get; set; }
+    public DbSet<Domains> Domains { get; set; }
+    public DbSet<UserDomainRole> UserDomainRoles { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,12 +33,32 @@ public class AppDbContext: DbContext
             .HasIndex(u => u.Email)
             .IsUnique();
 
-        // Store the Role Enum as a String (OPERATOR/Admin) in the DB
-        modelBuilder.Entity<User>()
-            .Property(u => u.Role)
-            .HasConversion<string>();
+        modelBuilder.Entity<UserDomainRole>()
+            .HasOne(udr => udr.User)
+            .WithMany(u => u.UserDomainRoles)
+            .HasForeignKey(udr => udr.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // 4. Postgres optimization: Map the DateTime fields to 'timestamp with time zone'
+        modelBuilder.Entity<UserDomainRole>()
+            .HasOne(udr => udr.Role)
+            .WithMany(r => r.UserDomainRoles)
+            .HasForeignKey(udr => udr.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserDomainRole>()
+            .HasOne(udr => udr.Domain)
+            .WithMany(d => d.UserDomainRoles)
+            .HasForeignKey(udr => udr.DomainId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        
+        modelBuilder.Entity<Events>()
+            .HasOne(e => e.Domain)
+            .WithMany(d => d.Events)
+            .HasForeignKey(e => e.DomainId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        
         // This is the best practice for Npgsql in 2026
         modelBuilder.Entity<User>()
             .Property(u => u.CreatedAt)
@@ -73,7 +94,7 @@ public class AppDbContext: DbContext
         
         
         modelBuilder.Entity<Events>()
-            .HasOne(e => e.EventsRecurrenceRules)
+            .HasOne(e => e.EventsRecurrenceRule)
             .WithOne(r => r.Event)      
             .HasForeignKey<EventsRecurrenceRules>(r=> r.EventId)
             .OnDelete(DeleteBehavior.Cascade);  
