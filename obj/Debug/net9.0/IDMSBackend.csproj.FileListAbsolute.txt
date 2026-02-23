@@ -122,3 +122,4 @@ C:\Users\victor\Developent\IDMSBackend\obj\Debug\net9.0\refint\IDMSBackend.dll
 C:\Users\victor\Developent\IDMSBackend\obj\Debug\net9.0\IDMSBackend.pdb
 C:\Users\victor\Developent\IDMSBackend\obj\Debug\net9.0\IDMSBackend.genruntimeconfig.cache
 C:\Users\victor\Developent\IDMSBackend\obj\Debug\net9.0\ref\IDMSBackend.dll
+C:\Users\victor\Developent\IDMSBackend\bin\Debug\net9.0\BCrypt.Net-Next.dll
