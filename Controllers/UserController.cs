@@ -29,4 +29,47 @@ public class UserController : ControllerBase
         }
     }
     
+    [HttpGet("{userId}")]
+    public  async Task<IActionResult> GetUserById(Guid userId)
+    {
+        try
+        {
+            var response = await _userService.GetUserByIdAsync(userId);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Success = false, Message = "An error occurred while retrieving the user.", Details = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        try
+        {
+            var response = await _userService.GetAllUsersAsync();
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Success = false, Message = "An error occurred while retrieving users.", Details = ex.Message });
+        }
+    }
+    
+    [HttpPut("{userId}")]
+    public async Task<IActionResult> UpdateUser(Guid userId, UserUpdateDto userUpdateDto)
+    {
+        try
+        {
+            var response = await _userService.UpdateUserAsync(userId, userUpdateDto);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Success = false, Message = "An error occurred while updating the user.", Details = ex.Message });
+        }
+    }
+    
+    
 }

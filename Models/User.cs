@@ -19,6 +19,7 @@ public class User
     public string LastName{ get; set; }
     public  string  PasswordHash { get; set; } = string.Empty;
     public string  Email { get; set; } = string.Empty;
+    public  bool IsStudent { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; }= DateTime.UtcNow;
     

@@ -3,7 +3,9 @@ using IDMSBackend.Data;
 using  IDMSBackend.Services.Interfaces;
 using IDMSBackend.DTOs;
 using BCrypt.Net;
+using IDMSBackend.Models;
 using IDMSBackend.Wrappers;
+using Microsoft.EntityFrameworkCore;
 
 namespace IDMSBackend.Services.Implementations;
 public class UserServices : IUserService
@@ -22,14 +24,16 @@ public class UserServices : IUserService
         _logger.LogInformation("Creating user with SchoolId: {SchoolId}", userCreateDto.SchoolId);
         try
         {
-            var existinguser = _context.Users.FirstOrDefault(u => u.SchoolId == userCreateDto.SchoolId);
+            //checking if  the   schoolId or email already exists in the user table
+            var existinguser = await   _context.Users.FirstOrDefaultAsync(u => u.SchoolId == userCreateDto.SchoolId);
             if (existinguser != null)
             {
                 _logger.LogWarning("User creation failed: User with SchoolId {SchoolId} already exists",
                     userCreateDto.SchoolId);
                 return ApiResponse<UserResponseDto>.FailureResponse("User with this SchoolId already exists", 400);
             }
-            var existingEmail = _context.Users.FirstOrDefault(u => u.Email == userCreateDto.Email);
+            //checking if email already exists in the user table
+            var existingEmail =await  _context.Users.FirstOrDefaultAsync(u => u.Email == userCreateDto.Email);
             if (existingEmail != null)            {
                 _logger.LogWarning("User creation failed: User with Email {Email} already exists",
                     userCreateDto.Email);
@@ -37,7 +41,66 @@ public class UserServices : IUserService
             }
             
             
-            var user = new Models.User
+            
+            
+            //check if the user is a student and if the schoolId exists in the student table
+            if  (userCreateDto.IsStudent)
+             {
+                 var existingStudent =await  _context.Students.FirstOrDefaultAsync(s => s.SchoolId == userCreateDto.SchoolId);
+                 if (existingStudent == null)
+                 {
+                     _logger.LogWarning("User creation failed: Student with SchoolId {SchoolId} not found",
+                         userCreateDto.SchoolId);
+                     return ApiResponse<UserResponseDto>.FailureResponse("Student with this SchoolId does not exists", 400);
+                 }
+                 
+                 
+
+                 var user = new User()
+                 {
+                     SchoolId = userCreateDto.SchoolId,
+                     FirstName = existingStudent.FullName,
+                     LastName = existingStudent.FullName,
+                     Email = existingStudent.Email,
+                     IsStudent = true,
+                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password),
+                 };
+                 
+                 
+                 _logger.LogInformation("Creating user for student with SchoolId: {SchoolId}", userCreateDto.SchoolId);
+                    await _context.Users.AddAsync(user);
+                    await _context.SaveChangesAsync();
+                    
+                    var userResponse = new UserResponseDto
+                    {
+                        Id = user.Id,
+                        SchoolId = user.SchoolId,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        Roles = user.UserDomainRoles.Select(ur => new UserRoleDto
+                        {
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            DomainId = ur.DomainId,
+                            DomainName = ur.Domain.Name
+                        }).ToList()
+                    };
+                    
+                    
+                    return ApiResponse<UserResponseDto>.SuccessResponse(userResponse, "User created successfully for student", 201);
+
+
+             }
+
+            if (!string.IsNullOrWhiteSpace(userCreateDto.Email))
+            {
+                return ApiResponse<UserResponseDto>.FailureResponse();
+            }
+            
+
+            
+             var  newuser = new Models.User
             {
                 SchoolId = userCreateDto.SchoolId,
                 FirstName = userCreateDto.FirstName,
@@ -46,18 +109,17 @@ public class UserServices : IUserService
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password)
             };
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(newuser);
+            await _context.SaveChangesAsync();
 
-            var userResponse = new UserResponseDto
+           var usersResponse = new UserResponseDto
             {
-                Id = user.Id,
-                SchoolId = user.SchoolId,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                IsActive = true,
-                Roles = user.UserDomainRoles.Select(ur => new UserRoleDto
+                Id = newuser.Id,
+                SchoolId = newuser.SchoolId,
+                FirstName = newuser.FirstName,
+                LastName = newuser.LastName,
+                Email = newuser.Email,
+                Roles = newuser.UserDomainRoles.Select(ur => new UserRoleDto
                 {
                     RoleId = ur.RoleId,
                     RoleName = ur.Role.Name,
@@ -66,8 +128,8 @@ public class UserServices : IUserService
                 }).ToList()
             };
 
-            _logger.LogInformation("User created successfully with Id: {UserId}", user.Id);
-            return ApiResponse<UserResponseDto>.SuccessResponse(userResponse, "User created successfully", 201);
+            _logger.LogInformation("User created successfully with Id: {UserId}", newuser.Id);
+            return ApiResponse<UserResponseDto>.SuccessResponse(usersResponse, "User created successfully", 201);
         }
         catch (Exception ex)
         {
@@ -77,5 +139,137 @@ public class UserServices : IUserService
         
         
     }
+    
+    
+    public  async Task<ApiResponse<UserResponseDto>> GetUserByIdAsync(Guid userId)
+    {
+        _logger.LogInformation("Retrieving user with Id: {UserId}", userId);
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User retrieval failed: User with Id {UserId} not found", userId);
+                return ApiResponse<UserResponseDto>.FailureResponse("User not found", 404);
+            }
+
+            var userResponse = new UserResponseDto
+            {
+                Id = user.Id,
+                SchoolId = user.SchoolId,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Roles = user.UserDomainRoles.Select(ur => new UserRoleDto
+                {
+                    RoleId = ur.RoleId,
+                    RoleName = ur.Role.Name,
+                    DomainId = ur.DomainId,
+                    DomainName = ur.Domain.Name
+                }).ToList()
+            };
+
+            _logger.LogInformation("User retrieved successfully with Id: {UserId}", user.Id);
+            return ApiResponse<UserResponseDto>.SuccessResponse(userResponse, "User retrieved successfully", 200);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving user with Id: {UserId}", userId);
+            return ApiResponse<UserResponseDto>.FailureResponse($"An error occurred while retrieving the user error:{ex.Message}", 500);
+        }
+    }
+
+
+    public async  Task<ApiResponse<List<UserResponseDto>>> GetAllUsersAsync()
+    {
+        _logger.LogInformation("Retrieving all users");
+        try
+        {           var users = await _context.Users
+                .AsNoTracking()
+                .Select(u => new UserResponseDto
+                {
+                    Id = u.Id,
+                    SchoolId = u.SchoolId,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    Roles = u.UserDomainRoles.Select(ur => new UserRoleDto
+                    {
+                        RoleId = ur.RoleId,
+                        RoleName = ur.Role.Name,
+                        DomainId = ur.DomainId,
+                        DomainName = ur.Domain.Name
+                    }).ToList()
+                })
+                .ToListAsync();
+            
+           
+            
+            _logger.LogInformation("All users retrieved successfully. Total users: {UserCount}", users.Count);
+            return (ApiResponse<List<UserResponseDto>>.SuccessResponse(users, "All users retrieved successfully", 200));
+        }
+        catch (Exception ex)        {
+            _logger.LogError(ex, "Error occurred while retrieving all users");
+            return (ApiResponse<List<UserResponseDto>>.FailureResponse($"An error occurred while retrieving users error:{ex.Message}", 500));
+        }
+    }
+    
+    public async Task <ApiResponse<UserResponseDto>> UpdateUserAsync(Guid userId, UserUpdateDto userUpdateDto)
+    {
+        _logger.LogInformation("updating user with Id: {UserId}", userId);
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User update failed: User with Id {UserId} not found", userId);
+                return (ApiResponse<UserResponseDto>.FailureResponse("User not found", 404));
+            }
+
+            if (!string.IsNullOrWhiteSpace(userUpdateDto.FirstName))
+            {
+                user.FirstName = userUpdateDto.FirstName;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(userUpdateDto.LastName))
+            {
+                user.LastName = userUpdateDto.LastName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(userUpdateDto.Email))
+            {
+                user.Email = userUpdateDto.Email;
+            }
+            
+            await _context.SaveChangesAsync();
+
+            var userResponse = new UserResponseDto
+            {
+                Id = user.Id,
+                SchoolId = user.SchoolId,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Roles = user.UserDomainRoles.Select(ur => new UserRoleDto
+                {
+                    RoleId = ur.RoleId,
+                    RoleName = ur.Role.Name,
+                    DomainId = ur.DomainId,
+                    DomainName = ur.Domain.Name
+                }).ToList()
+            };
+
+            _logger.LogInformation("User updated successfully with Id: {UserId}", user.Id);
+            return (ApiResponse<UserResponseDto>.SuccessResponse(userResponse, "User updated successfully", 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating user with Id: {UserId}", userId);
+            return (ApiResponse<UserResponseDto>.FailureResponse($"An error occurred while updating the user error:{ex.Message}", 500));
+            
+        }
+    }
+    
+    
     
 }
