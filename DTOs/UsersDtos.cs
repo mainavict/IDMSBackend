@@ -8,10 +8,11 @@ public class UserResponseDto
 {
     public Guid Id { get; set; }
     public string SchoolId { get; set; } = string.Empty;
-    
     public string? FacultyId { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public String UserType { get; set; } = string.Empty;
+    public String Status { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 
     public List<UserRoleDto> Roles { get; set; } = new List<UserRoleDto>();
@@ -34,6 +35,7 @@ public class UserCreateDto
 
 public class UserUpdateDto
     {
+        
         [StringLength(100)]
         public string? FirstName { get; set; } = string.Empty;
         [StringLength(100)]
@@ -63,6 +65,12 @@ public class ChangePasswordDto
     [MinLength(6)]
     public string NewPassword { get; set; } = string.Empty;
 }
+
+public class ChangeUserStatusDto
+{
+    [Required]
+    public UserStatus NewStatus { get; set; }
+}   
 
     
 

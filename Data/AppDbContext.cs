@@ -33,6 +33,10 @@ public class AppDbContext: DbContext
             .IsUnique()
             .HasFilter("\"FacultyId\" IS NOT NULL AND \"FacultyId\" <> ''");
 
+        
+        modelBuilder.Entity<User>()
+            .Property(u=>u.Status)
+            .HasConversion<string>();
 
 
         //Ensure Email is unique
@@ -109,7 +113,11 @@ public class AppDbContext: DbContext
             .WithOne(r => r.Event)      
             .HasForeignKey<EventsRecurrenceRules>(r=> r.EventId)
             .OnDelete(DeleteBehavior.Cascade);  
+        
+      
     }
+    
+    
 
     
 }

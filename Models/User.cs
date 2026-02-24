@@ -8,6 +8,13 @@ public enum UserType
     Faculty
 }
 
+public enum UserStatus
+{
+    Active,      // Normal, can login and use the app
+    Suspended,   // Temporarily blocked, cannot login
+    Deleted      // Soft-deleted, hidden from normal queries
+}
+
 
 public class User
 {
@@ -29,6 +36,8 @@ public class User
     public string FirstName { get; set; }
     [Required]
     public string LastName{ get; set; }
+    
+    public UserStatus Status { get; set; } = UserStatus.Active;
     public  string  PasswordHash { get; set; } = string.Empty;
     public string  Email { get; set; } = string.Empty;
    

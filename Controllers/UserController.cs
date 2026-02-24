@@ -70,6 +70,44 @@ public class UserController : ControllerBase
             return StatusCode(500, new { Success = false, Message = "An error occurred while updating the user.", Details = ex.Message });
         }
     }
+
+    [HttpPost("{userId}/change-password")]
+    public async Task<IActionResult> ChangePassword(Guid userId, ChangePasswordDto changePasswordDto)
+    {
+        try
+        {
+            var response = await _userService.ChangePasswordAsync(userId, changePasswordDto);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new
+                {
+                    Success = false, Message = "An error occurred while changing the password.", Details = ex.Message
+                });
+        }
+
+    }
     
-    
+    [HttpPost("{userId}/change-status")]
+   public async Task<IActionResult> ChangeUserStatus(Guid userId, ChangeUserStatusDto changeUserStatusDto)
+    {
+        try
+        {
+            var response = await _userService.ChangeUserStatusAsync(userId, changeUserStatusDto);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new
+                {
+                    Success = false, Message = "An error occurred while changing the user status.", Details = ex.Message
+                });
+        }
+    }
+
+
+
 }
