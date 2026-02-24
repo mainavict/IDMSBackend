@@ -8,6 +8,21 @@ public class DbInitializer
     public static void Seed(AppDbContext context)
     {
         context.Database.Migrate();
+        
+        
+        
+        if (!context.Roles.Any())
+        {
+            var roles = new List<Roles>
+            {
+                new Roles { Id = Guid.Parse("A1111111-1111-1111-1111-111111111111"), Name = "Admin", Description = "Full system access" },
+                new Roles { Id = Guid.Parse("B2222222-2222-2222-2222-222222222222"), Name = "Manager", Description = "Event and Report management" },
+                new Roles { Id = Guid.Parse("C3333333-3333-3333-3333-333333333333"), Name = "Scanner", Description = "Restricted scanning access" }
+            };
+            context.Roles.AddRange(roles);
+            context.SaveChanges();
+            Console.WriteLine("--> Seeding Roles...");
+        }
 
         if (context.Students.Any())
             return;

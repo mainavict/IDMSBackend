@@ -112,7 +112,11 @@ public class AppDbContext: DbContext
             .HasOne(e => e.EventsRecurrenceRule)
             .WithOne(r => r.Event)      
             .HasForeignKey<EventsRecurrenceRules>(r=> r.EventId)
-            .OnDelete(DeleteBehavior.Cascade);  
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Roles>()
+            .HasIndex(r => r.Name)
+            .IsUnique();
         
       
     }

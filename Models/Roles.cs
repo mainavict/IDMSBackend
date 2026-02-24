@@ -10,6 +10,10 @@ public class Roles
     [StringLength(50)]
     public string Name { get; set; } = string.Empty;
     
+    public string Description { get; set; } = string.Empty;
+    
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
     public ICollection<UserDomainRole> UserDomainRoles { get; set; }
         = new List<UserDomainRole>();
     

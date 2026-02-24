@@ -32,6 +32,7 @@ builder.Services.AddOpenApi();
 // Future: builder.Services.AddDbContext<AppDbContext>(...);
 builder.Services.AddScoped<IStudentCards, StudentCardServices>();
 builder.Services.AddScoped<IUserService, UserServices>();
+builder.Services.AddScoped<IRoleServices, RoleServices>();
 
 // Future: builder.Services.AddScoped<IIdentityService, IdentityService>();
 
