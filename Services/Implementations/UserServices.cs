@@ -25,26 +25,34 @@ public class UserServices : IUserService
         try
         {
             //checking if  the   schoolId or email already exists in the user table
-            var existinguser = await   _context.Users.FirstOrDefaultAsync(u => u.SchoolId == userCreateDto.SchoolId);
-            if (existinguser != null)
+            if (userCreateDto.userType == UserType.Student && !string.IsNullOrWhiteSpace(userCreateDto.SchoolId))
             {
-                _logger.LogWarning("User creation failed: User with SchoolId {SchoolId} already exists",
-                    userCreateDto.SchoolId);
-                return ApiResponse<UserResponseDto>.FailureResponse("User with this SchoolId already exists", 400);
+                var existingUser = await _context.Users.AnyAsync(u => u.SchoolId == userCreateDto.SchoolId);
+                if (existingUser)
+                {
+                    _logger.LogWarning("User creation failed: User with SchoolId {SchoolId} already exists",
+                        userCreateDto.SchoolId);
+                    return ApiResponse<UserResponseDto>.FailureResponse("User with this SchoolId already exists", 400);
+                }
             }
             //checking if email already exists in the user table
-            var existingEmail =await  _context.Users.FirstOrDefaultAsync(u => u.Email == userCreateDto.Email);
-            if (existingEmail != null)            {
-                _logger.LogWarning("User creation failed: User with Email {Email} already exists",
-                    userCreateDto.Email);
-                return ApiResponse<UserResponseDto>.FailureResponse("User with this Email already exists", 400);
+            
+            if (!string.IsNullOrWhiteSpace(userCreateDto.Email))
+            {
+               var existingEmail =await  _context.Users.FirstOrDefaultAsync(u => u.Email == userCreateDto.Email);
+                          if (existingEmail != null)            {
+                              _logger.LogWarning("User creation failed: User with Email {Email} already exists",
+                                  userCreateDto.Email);
+                              return ApiResponse<UserResponseDto>.FailureResponse("User with this Email already exists", 400);
+                          }
             }
+           
             
             
             
             
             //check if the user is a student and if the schoolId exists in the student table
-            if  (userCreateDto.IsStudent)
+            if  (userCreateDto.userType == UserType.Student)
              {
                  var existingStudent =await  _context.Students.FirstOrDefaultAsync(s => s.SchoolId == userCreateDto.SchoolId);
                  if (existingStudent == null)
@@ -62,7 +70,7 @@ public class UserServices : IUserService
                      FirstName = existingStudent.FullName,
                      LastName = existingStudent.FullName,
                      Email = existingStudent.Email,
-                     IsStudent = true,
+                     userType = userCreateDto.userType,
                      PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password),
                  };
                  
@@ -92,44 +100,52 @@ public class UserServices : IUserService
 
 
              }
-
-            if (!string.IsNullOrWhiteSpace(userCreateDto.Email))
+            
+          
+            if (userCreateDto.userType == UserType.Faculty)
             {
-                return ApiResponse<UserResponseDto>.FailureResponse();
+                if (string.IsNullOrWhiteSpace(userCreateDto.FirstName) || string.IsNullOrWhiteSpace(userCreateDto.LastName) || string.IsNullOrWhiteSpace(userCreateDto.Email) || string.IsNullOrWhiteSpace(userCreateDto.Password) || string.IsNullOrWhiteSpace(userCreateDto.FacultyId))
+                {
+                    return ApiResponse<UserResponseDto>.FailureResponse("FirstName, LastName, Email, Password and FacultyId are required fields for faculty users", 400);
+                }
+
+            
+                var  newuser = new Models.User
+                {
+                    FacultyId = userCreateDto.FacultyId,
+                    FirstName = userCreateDto.FirstName,
+                    LastName = userCreateDto.LastName,
+                    Email = userCreateDto.Email,
+                    userType = userCreateDto.userType,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password)
+                };
+
+                await _context.Users.AddAsync(newuser);
+                await _context.SaveChangesAsync();
+
+                var usersResponse = new UserResponseDto
+                {
+                    Id = newuser.Id,
+                    FacultyId = newuser.FacultyId,
+                    FirstName = newuser.FirstName,
+                    LastName = newuser.LastName,
+                    Email = newuser.Email,
+                    Roles = newuser.UserDomainRoles.Select(ur => new UserRoleDto
+                    {
+                        RoleId = ur.RoleId,
+                        RoleName = ur.Role.Name,
+                        DomainId = ur.DomainId,
+                        DomainName = ur.Domain.Name
+                    }).ToList()
+                };
+
+                _logger.LogInformation("User created successfully with Id: {UserId}", newuser.Id);
+                return ApiResponse<UserResponseDto>.SuccessResponse(usersResponse, "User created successfully", 201);
+                
             }
             
-
+                return ApiResponse<UserResponseDto>.FailureResponse("Invalid user type specified", 400);
             
-             var  newuser = new Models.User
-            {
-                SchoolId = userCreateDto.SchoolId,
-                FirstName = userCreateDto.FirstName,
-                LastName = userCreateDto.LastName,
-                Email = userCreateDto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.Password)
-            };
-
-            await _context.Users.AddAsync(newuser);
-            await _context.SaveChangesAsync();
-
-           var usersResponse = new UserResponseDto
-            {
-                Id = newuser.Id,
-                SchoolId = newuser.SchoolId,
-                FirstName = newuser.FirstName,
-                LastName = newuser.LastName,
-                Email = newuser.Email,
-                Roles = newuser.UserDomainRoles.Select(ur => new UserRoleDto
-                {
-                    RoleId = ur.RoleId,
-                    RoleName = ur.Role.Name,
-                    DomainId = ur.DomainId,
-                    DomainName = ur.Domain.Name
-                }).ToList()
-            };
-
-            _logger.LogInformation("User created successfully with Id: {UserId}", newuser.Id);
-            return ApiResponse<UserResponseDto>.SuccessResponse(usersResponse, "User created successfully", 201);
         }
         catch (Exception ex)
         {

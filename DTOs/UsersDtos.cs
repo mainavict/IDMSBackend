@@ -1,5 +1,6 @@
 using  System.ComponentModel.DataAnnotations;
 using IDMSBackend.DTOs;
+using IDMSBackend.Models;
 
 namespace IDMSBackend.DTOs;
 
@@ -7,6 +8,8 @@ public class UserResponseDto
 {
     public Guid Id { get; set; }
     public string SchoolId { get; set; } = string.Empty;
+    
+    public string? FacultyId { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -17,13 +20,16 @@ public class UserResponseDto
 
 public class UserCreateDto
     {
-        public string? SchoolId { get; set; } = string.Empty;
+        public string? SchoolId { get; set; } 
         
-        public  bool IsStudent { get; set; } = false;
-        public string? FirstName { get; set; } = string.Empty;
-        public string? LastName { get; set; } = string.Empty;
-        public string? Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
+        public string? FacultyId { get; set; }
+
+       public UserType userType { get; set; }
+       
+        public string? FirstName { get; set; } 
+        public string? LastName { get; set; } 
+        public string? Email { get; set; } 
+        public string Password { get; set; } 
     }
 
 public class UserUpdateDto

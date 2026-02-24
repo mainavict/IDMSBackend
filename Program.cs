@@ -7,6 +7,7 @@ using  Microsoft.EntityFrameworkCore;
 using IDMSBackend.Data;
 using IDMSBackend.Services.Interfaces;
 using IDMSBackend.Services.Implementations;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -20,7 +21,9 @@ builder.Services.AddHealthChecks()
         name: "PostgreSQL", 
         failureStatus: HealthStatus.Unhealthy, 
         tags: new[] { "db", "data" });
-builder.Services.AddControllers();
+builder.Services.AddControllers() .AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(
+        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));;
 
 // This adds the OpenAPI (Swagger) document generation
 builder.Services.AddOpenApi(); 

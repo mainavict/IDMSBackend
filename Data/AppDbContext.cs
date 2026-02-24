@@ -25,13 +25,24 @@ public class AppDbContext: DbContext
         //SchoolId is unique (smaivi2309 can't be used twice)
         modelBuilder.Entity<User>()
             .HasIndex(u => u.SchoolId)
-            .IsUnique();
-        
+            .IsUnique()
+            .HasFilter("\"SchoolId\" IS NOT NULL AND \"SchoolId\" <> ''");
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.FacultyId)
+            .IsUnique()
+            .HasFilter("\"FacultyId\" IS NOT NULL AND \"FacultyId\" <> ''");
+
+
 
         //Ensure Email is unique
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+        
+        modelBuilder.Entity<User>()
+            .Property(u => u.userType)
+            .HasConversion<string>();
 
         modelBuilder.Entity<UserDomainRole>()
             .HasOne(udr => udr.User)
