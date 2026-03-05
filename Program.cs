@@ -8,6 +8,7 @@ using IDMSBackend.Data;
 using IDMSBackend.Services.Interfaces;
 using IDMSBackend.Services.Implementations;
 using System.Text.Json.Serialization;
+using IDMSBackend.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -28,12 +29,23 @@ builder.Services.AddControllers() .AddJsonOptions(options =>
 // This adds the OpenAPI (Swagger) document generation
 builder.Services.AddOpenApi(); 
 
+var syncSettings = builder.Configuration.GetSection("SyncSettings");
+var baseUrl = syncSettings["UniversityBaseUrl"];
+
+builder.Services.AddHttpClient("UniversityApi", client =>
+{
+    client.BaseAddress = new Uri(baseUrl??"https://default-url.com"); // endpint  address
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromMinutes(30); // Give it 30 minutes to download 5,000+ records
+});
+
 
 // Future: builder.Services.AddDbContext<AppDbContext>(...);
 builder.Services.AddScoped<IStudentCards, StudentCardServices>();
 builder.Services.AddScoped<IUserService, UserServices>();
 builder.Services.AddScoped<IRoleServices, RoleServices>();
 builder.Services.AddScoped<IStudentServices, StudentServices>();
+builder.Services.AddHostedService<StudentSyncWorker>();
 
 // Future: builder.Services.AddScoped<IIdentityService, IdentityService>();
 

@@ -61,67 +61,98 @@ public class StudentServices: IStudentServices
     }
     
     
-    public async Task<ApiResponse<SyncResultDto>> SyncStudentsAsync(List<StudentSyncDto> externalStudents)
-    {
-        _logger.LogInformation("IDMS Sync: Processing {Count} students from Master DB", externalStudents.Count);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        
-        // 1. Load existing students into memory (SchoolId as key) to avoid N+1 query problem
-        var localStudents = await _dbContext.Students.ToDictionaryAsync(s => s.SchoolId);
-        
-        int added = 0;
-        int updated = 0;
+  public async Task<ApiResponse<SyncResultDto>> SyncStudentsAsync(List<StudentSyncDto> externalStudents)
+{
+    _logger.LogInformation("IDMS Sync: Processing {Count} students from Master DB", externalStudents.Count);
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-        foreach (var ext in externalStudents)
+    // 1. Optimized Fetch: Only pull the columns needed for comparison
+    // This keeps the memory footprint small even if you have thousands of records.
+    var localStudents = await _dbContext.Students
+        .Select(s => new { 
+            s.Id, 
+            s.SchoolId, 
+            s.FullName, 
+            s.Email, 
+            s.Residence, 
+            s.YearOfStudy, 
+            s.AcademicStatus 
+        })
+        .ToDictionaryAsync(s => s.SchoolId);
+
+    int added = 0;
+    int updated = 0;
+    int batchSize = 50; 
+    int currentCount = 0;
+
+    foreach (var ext in externalStudents)
+    {
+        currentCount++;
+
+        if (localStudents.TryGetValue(ext.SchoolId, out var existingInfo))
         {
-            if (localStudents.TryGetValue(ext.SchoolId, out var existing))
+            // Check if any field has actually changed
+            bool hasChanged = existingInfo.FullName != ext.FullName ||
+                              existingInfo.Email != ext.Email ||
+                              existingInfo.Residence != ext.Residence ||
+                              existingInfo.YearOfStudy != ext.YearOfStudy ||
+                              existingInfo.AcademicStatus != ext.AcademicStatus;
+
+            if (hasChanged)
             {
-                // Update if data changed
-                if (existing.YearOfStudy != ext.YearOfStudy || existing.Email != ext.Email ||existing.FullName != ext.FullName || existing.Residence != ext.Residence || existing.AcademicStatus != ext.AcademicStatus)
-                {
-                    existing.FullName = ext.FullName;
-                    existing.Email = ext.Email;
-                    existing.Residence = ext.Residence;
-                    existing.YearOfStudy = ext.YearOfStudy;
-                    existing.AcademicStatus = ext.AcademicStatus;
-                    existing.UpdatedAt = DateTime.UtcNow;
-                    existing.LastSyncDate= DateTime.UtcNow;
-                    updated++;
-                }
-                else
-                {
-                    existing.LastSyncDate=DateTime.UtcNow;
-                }
-            }
-            else
-            {
-                // Add new student
-                _dbContext.Students.Add(new Students
-                {
-                    Id = Guid.NewGuid(),
-                    SchoolId = ext.SchoolId,
-                    FullName = ext.FullName,
-                    Email = ext.Email,
-                    Residence = ext.Residence,
-                    YearOfStudy = ext.YearOfStudy,
-                    AcademicStatus = ext.AcademicStatus,
-                    CreatedAt = DateTime.UtcNow,
-                    LastSyncDate = DateTime.UtcNow,
-                });
-                added++;
+                // We fetch the actual entity to update it (EF Core needs the real object to track changes)
+                var studentToUpdate = new Students { Id = existingInfo.Id };
+                _dbContext.Students.Attach(studentToUpdate);
+
+                studentToUpdate.FullName = ext.FullName;
+                studentToUpdate.Email = ext.Email;
+                studentToUpdate.Residence = ext.Residence;
+                studentToUpdate.YearOfStudy = ext.YearOfStudy;
+                studentToUpdate.AcademicStatus = ext.AcademicStatus;
+                studentToUpdate.UpdatedAt = DateTime.UtcNow;
+                studentToUpdate.LastSyncDate = DateTime.UtcNow;
+                
+                updated++;
             }
         }
+        else
+        {
+            // 2. Add new student
+            _dbContext.Students.Add(new Students
+            {
+                Id = Guid.NewGuid(),
+                SchoolId = ext.SchoolId,
+                FullName = ext.FullName,
+                Email = ext.Email,
+                Residence = ext.Residence,
+                YearOfStudy = ext.YearOfStudy,
+                AcademicStatus = ext.AcademicStatus,
+                CreatedAt = DateTime.UtcNow,
+                LastSyncDate = DateTime.UtcNow,
+            });
+            added++;
+        }
 
-        await _dbContext.SaveChangesAsync();
-        stopwatch.Stop();
-
-        return ApiResponse<SyncResultDto>.SuccessResponse(new SyncResultDto 
-        { 
-            AddedCount = added, 
-            UpdatedCount = updated,
-            ExecutionTimeMs = stopwatch.ElapsedMilliseconds
-        }, "Daily refresh completed.");
+        // 3. BATCH SAVE: This prevents the "Failed executing DbCommand" error
+        if (currentCount % batchSize == 0)
+        {
+            await _dbContext.SaveChangesAsync();
+            // Optional: Clears the tracker to keep memory usage low during large syncs
+            _dbContext.ChangeTracker.Clear(); 
+        }
     }
+
+    // 4. Final Save for any remaining records (e.g., the last 4 students)
+    await _dbContext.SaveChangesAsync();
     
-    
+    stopwatch.Stop();
+
+    return ApiResponse<SyncResultDto>.SuccessResponse(new SyncResultDto 
+    { 
+        AddedCount = added, 
+        UpdatedCount = updated,
+        ExecutionTimeMs = stopwatch.ElapsedMilliseconds
+    }, $"Sync completed: {added} added, {updated} updated.");
+}
+
 }

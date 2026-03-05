@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace IDMSBackend.DTOs;
 
 public class StudentResponseDtos
@@ -27,15 +29,24 @@ public class CreateStudentDtos
 
 public class StudentSyncDto
 {
+
+
+    [JsonPropertyName("school_id")]
     public string SchoolId { get; set; } = string.Empty;
-    
+
+    [JsonPropertyName("full_name")]
     public string FullName { get; set; } = string.Empty;
-    
+
+    [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
-    
+
+    [JsonPropertyName("year_of_study")]
     public string YearOfStudy { get; set; } = string.Empty;
-    
+
+    [JsonPropertyName("residence")]
     public string Residence { get; set; } = string.Empty;
+
+    [JsonPropertyName("academic_status")]
     public string AcademicStatus { get; set; } = string.Empty;
 }
 
