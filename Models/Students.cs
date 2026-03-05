@@ -23,6 +23,7 @@ public class Students
     public string AcademicStatus { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; }= DateTime.UtcNow;
+    public DateTime LastSyncDate { get; set; }
     
     public StudentCards StudentCards { get; set; } 
     

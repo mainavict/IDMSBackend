@@ -33,6 +33,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IStudentCards, StudentCardServices>();
 builder.Services.AddScoped<IUserService, UserServices>();
 builder.Services.AddScoped<IRoleServices, RoleServices>();
+builder.Services.AddScoped<IStudentServices, StudentServices>();
 
 // Future: builder.Services.AddScoped<IIdentityService, IdentityService>();
 
