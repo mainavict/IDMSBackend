@@ -8,7 +8,22 @@ public class DbInitializer
     public static void Seed(AppDbContext context)
     {
         context.Database.Migrate();
-        
+
+
+        if (!context.Domains.Any())
+        {
+            var domains = new List<Domains>
+            {
+                new Domains { Id = Guid.Parse("D1111111-1111-1111-1111-111111111111"), Name = "Church" },
+                new Domains { Id = Guid.Parse("E2222222-2222-2222-2222-222222222222"), Name = "Cafeteria" },
+                new Domains { Id = Guid.Parse("F3333333-3333-3333-3333-333333333333"), Name = "Men's-dorm" },
+                new Domains { Id = Guid.Parse("A4444444-4444-4444-4444-444444444444"), Name = "Library" },
+                new Domains { Id = Guid.Parse("B5555555-5555-5555-5555-555555555555"), Name = "Lady's-dorm" }
+            };
+            context.Domains.AddRange(domains);
+            context.SaveChanges();
+            Console.WriteLine("--> Seeding Domains...");
+        }
         
         
         if (!context.Roles.Any())
