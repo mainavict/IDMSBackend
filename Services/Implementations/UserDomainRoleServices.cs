@@ -55,7 +55,14 @@ public class UserDomainRoleServices : IUserDomainRole
 
             }
             
-           
+            var  existingAssignment = _dbContext.UserDomainRoles.FirstOrDefault(udr =>
+                udr.UserId == allocateRoleToUserDtos.UserId &&
+                udr.RoleId == role.Id &&
+                udr.DomainId == domain.Id);
+            if (existingAssignment != null)            {
+                _logger.LogWarning("User already has the role assigned in the domain");
+                return  ApiResponse<UserDomainRoleDtos>.FailureResponse("User already has the role assigned in the domain", 400);
+            }
 
             var userDomainRole = new UserDomainRole
             {
