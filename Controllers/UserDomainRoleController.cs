@@ -79,6 +79,25 @@ public class UserDomainRoleController: ControllerBase
                 });
         }
     }
-    
+
+    [HttpGet("get-users-by-domain")]
+    public async Task<IActionResult> GetAllDomainusersByDomainName(string domainName)
+    {
+        try
+        {
+            var response = await _userDomainRoleService.GetAllDomainusersByDomainNameAsync(domainName);
+            return StatusCode(response.StatusCode, response);
+
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new
+                {
+                    Success = false, Message = "An error occurred while retrieving users for the specified domain.",
+                    Details = ex.Message
+                }); 
+        }
+    }
 
 }

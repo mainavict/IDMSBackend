@@ -195,4 +195,58 @@ public class UserDomainRoleServices : IUserDomainRole
     }
 
 
+    public async Task<ApiResponse<List<UserDomainRoleDtos>>> GetAllDomainusersByDomainNameAsync(string domainName)
+    {
+        _logger.LogInformation("Retrieving all users with roles for domain: {DomainName}", domainName);
+        
+        if (string.IsNullOrWhiteSpace(domainName))
+        {
+            _logger.LogWarning("Domain name is null or empty");
+            return ApiResponse<List<UserDomainRoleDtos>>.FailureResponse("Domain name cannot be null or empty", 400);
+        }
+
+        try
+        {
+            var standardizedDomainName = domainName.Trim().ToLower();
+            standardizedDomainName = char.ToUpper(standardizedDomainName[0]) + standardizedDomainName.Substring(1);
+            
+            var domain = await _dbContext.Domains.AsNoTracking().FirstOrDefaultAsync(d => d.Name == standardizedDomainName);
+            if (domain == null)
+            {
+                _logger.LogWarning("Domain not found with name: {DomainName}", domainName);
+                return ApiResponse<List<UserDomainRoleDtos>>.FailureResponse("Domain not found", 404);
+            }
+
+            var userDomainRoles = await _dbContext.UserDomainRoles
+                .Where(udr => udr.DomainId == domain.Id)
+                .Include(udr => udr.User)
+                .Include(udr => udr.Role)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var userDomainRoleDtos = userDomainRoles.Select(udr => new UserDomainRoleDtos
+            {
+                UserId = udr.UserId,
+                FullName = udr.User.FirstName + " " + udr.User.LastName,
+                RoleId = udr.RoleId,
+                RoleName = udr.Role.Name,
+                DomainId = udr.DomainId,
+                DomainName = domain.Name,
+                AssignedAt = udr.AssignedAt
+            }).ToList();
+
+            _logger.LogInformation("Users with roles retrieved successfully for domain: {DomainName}", domainName);
+            return ApiResponse<List<UserDomainRoleDtos>>.SuccessResponse(userDomainRoleDtos,
+                "Users with roles retrieved successfully for domain", 200);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving users with roles for domain: {DomainName}",
+                domainName);
+            return ApiResponse<List<UserDomainRoleDtos>>.FailureResponse(
+                "An error occurred while retrieving users with roles for the domain.", 500);
+        }
+
+    }
+
 }
