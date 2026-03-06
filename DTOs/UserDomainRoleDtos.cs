@@ -3,8 +3,8 @@ namespace IDMSBackend.DTOs;
 public class AllocateRoleToUserDtos
 {
     public Guid UserId { get; set; }
-    public Guid Role {get; set; }
-    public Guid Domain { get; set; }
+    public String Role {get; set; }
+    public String Domain { get; set; }
 }
 
 public class UserDomainRoleDtos
@@ -16,6 +16,16 @@ public class UserDomainRoleDtos
     public Guid DomainId { get; set; }
     public string DomainName { get; set; } = string.Empty;
     public DateTime AssignedAt { get; set; }
+}
+
+
+
+
+public class RemoveRoleFromUserInDomainDtos
+{
+    public Guid UserId { get; set; }
+    public Guid Role { get; set; }
+    public Guid Domain { get; set; }
 }
 
 
