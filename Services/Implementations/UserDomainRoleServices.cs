@@ -99,4 +99,100 @@ public class UserDomainRoleServices : IUserDomainRole
         }
 
     }
+    
+    public async Task <ApiResponse<List<UserDomainRoleDtos>>> GetUserRolesAndDomainsAsync(Guid userId)
+    {
+        _logger.LogInformation("Retrieving user roles and domains for user ID: {UserId}", userId);
+
+        try
+        {
+            var user = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found with ID: {UserId}", userId);
+                return  ApiResponse<List<UserDomainRoleDtos>>.FailureResponse("User not found", 404);
+            }
+            
+            var userDomainRoles = await _dbContext.UserDomainRoles
+                .Where(udr => udr.UserId == userId)
+                .Include(udr => udr.Role)
+                .Include(udr => udr.Domain)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var userDomainRoleDtos = userDomainRoles.Select(udr => new UserDomainRoleDtos
+            {
+                UserId = udr.UserId,
+                RoleId = udr.RoleId,
+                RoleName = udr.Role.Name,
+                DomainId = udr.DomainId,
+                DomainName = udr.Domain.Name,
+    }
+            ).ToList();
+
+            _logger.LogInformation("User roles and domains retrieved successfully for user ID: {UserId}", userId);
+            return  ApiResponse<List<UserDomainRoleDtos>>.SuccessResponse(userDomainRoleDtos, "User roles and domains retrieved successfully", 200);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving user roles and domains for user ID: {UserId}", userId);
+            return  ApiResponse<List<UserDomainRoleDtos>>.FailureResponse("An error occurred while retrieving the user roles and domains.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<bool>> RemoveRoleFromUserInDomainAsync(RemoveUserRoleDomainDtos removeRoleFromUserInDomainDtos)
+    {
+        _logger.LogInformation("Removing role from user in domain");
+
+        try
+        {
+            var user = await _dbContext.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == removeRoleFromUserInDomainDtos.UserId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found with ID: {UserId}", removeRoleFromUserInDomainDtos.UserId);
+                return ApiResponse<bool>.FailureResponse("User not found", 404);
+            }
+
+            var role = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == removeRoleFromUserInDomainDtos.Role);
+            if (role == null)
+            {
+                _logger.LogWarning("Role not found with name: {RoleName}", removeRoleFromUserInDomainDtos.Role);
+                return ApiResponse<bool>.FailureResponse("Role not found", 404);
+            }
+
+            var domain =
+                await _dbContext.Domains.FirstOrDefaultAsync(d => d.Name == removeRoleFromUserInDomainDtos.Domain);
+            if (domain == null)
+            {
+                _logger.LogWarning("Domain not found with name: {DomainName}", removeRoleFromUserInDomainDtos.Domain);
+                return ApiResponse<bool>.FailureResponse("Domain not found", 404);
+            }
+
+            var userDomainRole = await _dbContext.UserDomainRoles.FirstOrDefaultAsync(udr =>
+                udr.UserId == removeRoleFromUserInDomainDtos.UserId &&
+                udr.RoleId == role.Id &&
+                udr.DomainId == domain.Id);
+
+            if (userDomainRole == null)
+            {
+                _logger.LogWarning("User does not have the role assigned in the domain");
+                return ApiResponse<bool>.FailureResponse("User does not have the role assigned in the domain", 400);
+            }
+
+            _dbContext.UserDomainRoles.Remove(userDomainRole);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Role removed from user in domain successfully");
+            return ApiResponse<bool>.SuccessResponse(true, "Role removed from user in domain successfully", 200);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while removing role from user in domain");
+            return ApiResponse<bool>.FailureResponse(
+                "An error occurred while removing the role from the user in the domain.", 500);
+        }
+    }
+
+
 }

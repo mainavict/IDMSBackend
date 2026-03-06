@@ -39,5 +39,45 @@ public class UserDomainRoleController: ControllerBase
 
 
     }
+    
+    
+    [HttpGet]
+    public async Task<IActionResult> GetUserRolesAndDomains(Guid userId)
+    {
+        try
+        {
+            var response = await _userDomainRoleService.GetUserRolesAndDomainsAsync(userId);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new
+                {
+                    Success = false, Message = "An error occurred while retrieving the user's roles and domains.",
+                    Details = ex.Message
+                });
+        }
+    }
+
+    [HttpDelete("remove-role-domain")]
+    public async Task<IActionResult> RemoveRoleFromUserInDomain(RemoveUserRoleDomainDtos removeUserRoleDomainDtos)
+    {
+        try
+        {
+            var response = await _userDomainRoleService.RemoveRoleFromUserInDomainAsync(removeUserRoleDomainDtos);
+            return StatusCode(response.StatusCode, response);
+
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500,
+                new
+                {
+                    Success = false, Message = "An error occurred while removing the role from the user in the domain.",
+                    Details = ex.Message
+                });
+        }
+    }
 
 }

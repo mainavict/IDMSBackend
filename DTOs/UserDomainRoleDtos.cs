@@ -21,11 +21,11 @@ public class UserDomainRoleDtos
 
 
 
-public class RemoveRoleFromUserInDomainDtos
+public class RemoveUserRoleDomainDtos
 {
     public Guid UserId { get; set; }
-    public Guid Role { get; set; }
-    public Guid Domain { get; set; }
+    public String Role { get; set; }= string.Empty;
+    public String Domain { get; set; } = String.Empty;
 }
 
 
