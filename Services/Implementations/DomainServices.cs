@@ -8,7 +8,7 @@ using IDMSBackend.Models;
 
 namespace IDMSBackend.Services.Implementations;
 
-public class DomainServices
+public class DomainServices: IDomainsServices
 {
     private ILogger<RoleServices> _logger;
     private readonly AppDbContext _context;
