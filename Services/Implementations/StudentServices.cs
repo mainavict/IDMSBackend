@@ -21,6 +21,7 @@ public class StudentServices: IStudentServices
     
     public async Task<ApiResponse<List<StudentResponseDtos>>> GetAllStudentsAsync()
     {
+        _logger.LogInformation("Retrieving all students from the database");
         var students = await _dbContext.Students.AsNoTracking().ToListAsync();
         var studentDtos = students.Select(s => new StudentResponseDtos
         {
