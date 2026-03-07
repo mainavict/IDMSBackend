@@ -18,7 +18,6 @@ public class AppDbContext: DbContext
     public DbSet<Domains> Domains { get; set; }
     public DbSet<UserDomainRole> UserDomainRoles { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
