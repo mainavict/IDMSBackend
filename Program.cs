@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using IDMSBackend.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpContextAccessor();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
