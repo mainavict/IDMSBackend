@@ -79,7 +79,16 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        
+        
+        
+        modelBuilder.Entity<Events>()
+            .Property(e => e.EventType)
+            .HasConversion<string>();
+        modelBuilder.Entity<EventsRecurrenceRules>()
+            .Property(r => r.Frequency)
+            .HasConversion<string>();
+        
         // --- User Configuration ---
         modelBuilder.Entity<User>()
             .HasIndex(u => u.SchoolId).IsUnique()
@@ -93,7 +102,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<User>().Property(u => u.userType).HasConversion<string>();
         modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
+        
+       
         // --- UserDomainRole (Many-to-Many Join) ---
         modelBuilder.Entity<UserDomainRole>()
             .HasOne(udr => udr.User).WithMany(u => u.UserDomainRoles)

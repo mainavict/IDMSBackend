@@ -49,6 +49,7 @@ builder.Services.AddScoped<IStudentServices, StudentServices>();
 builder.Services.AddHostedService<StudentSyncWorker>();
 builder.Services.AddScoped<IDomainsServices, DomainServices>();
 builder.Services.AddScoped<IUserDomainRole, UserDomainRoleServices>();
+builder.Services.AddScoped<IEventServices, EventServices>();
 
 // Future: builder.Services.AddScoped<IIdentityService, IdentityService>();
 

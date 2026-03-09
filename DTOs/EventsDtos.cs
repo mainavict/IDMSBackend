@@ -70,7 +70,7 @@ public class UpdateEventDto
     public int ScanStartOffset { get; set; } = 15;
     public string Description { get; set; } = string.Empty;
     
-    // Recurrence Fields
+    //Recurrence Fields
     public bool IsRecurring { get; set; }
     public RecurrenceFrequency? Frequency { get; set; }
     public DayOfWeek? DayOfWeek { get; set; } // For Weekly

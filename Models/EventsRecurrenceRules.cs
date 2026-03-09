@@ -19,7 +19,7 @@ public class EventsRecurrenceRules
     public Events Event { get; set; } = null!;
     public RecurrenceFrequency Frequency { get; set; }  // daily / weekly / monthly / yearly
     public int Interval { get; set; } = 1; // every  1 day
-    public DayOfWeek DayOfWeek { get; set; } //weekly  recurrences
+    public DayOfWeek? DayOfWeek { get; set; } //weekly  recurrences
     public int DayOfMonth { get; set; } // monthly  recurrences
     public int MonthOfYear { get; set; } //yearly   recurrences
 }
